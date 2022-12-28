@@ -10,7 +10,7 @@
     "ver04": "SET VER=04 && nodemon --inspect server.js",
     "ver05": "SET VER=05 && nodemon --inspect server.js",
     "ver06": "SET VER=06 && nodemon --inspect server.js",
-    "serve": "nodemon --inspect server.js",
+    "serve": "node --inspect server.js",
     "gen-vapid": "web-push generate-vapid-keys" 
   },
   "author": "imekterovic",
