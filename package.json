@@ -4,7 +4,7 @@
   "description": "PWA examples used in lectures in Advanced web developmen course @FER",
   "main": "server.js",
   "scripts": {
-    "serve": "node --inspect server.js",
+    "serve": "node server.js",
     "gen-vapid": "web-push generate-vapid-keys" 
   },
   "author": "imekterovic",
