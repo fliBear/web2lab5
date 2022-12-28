@@ -2,19 +2,19 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const fse = require('fs-extra');
+const fse = require("fs-extra");
 const httpPort = 80;
-let VERSION;
+let VERSION = "02";
 
-if (process.env.VER) {
-    VERSION = process.env.VER.trim();
-    console.log("Serving version: " + VERSION);
-} else {
-    console.error(
-        "App version not set. Set the env var 'VER' to 01, 02, ... before you run the server"
-    );
-    process.exit();
-}
+// if (process.env.VER) {
+//     VERSION = process.env.VER.trim();
+//     console.log("Serving version: " + VERSION);
+// } else {
+//     console.error(
+//         "App version not set. Set the env var 'VER' to 01, 02, ... before you run the server"
+//     );
+//     process.exit();
+// }
 
 const app = express();
 app.use(express.json()); // za VER06
@@ -33,7 +33,7 @@ app.get("/", function (req, res) {
 // potrebno za VER05+
 const UPLOAD_PATH = path.join(__dirname, "public", VERSION, "uploads");
 var uploadSnaps = multer({
-    storage:  multer.diskStorage({
+    storage: multer.diskStorage({
         destination: function (req, file, cb) {
             cb(null, UPLOAD_PATH);
         },
@@ -41,22 +41,22 @@ var uploadSnaps = multer({
             let fn = file.originalname.replaceAll(":", "-");
             cb(null, fn);
         },
-    })
+    }),
 }).single("image");
-app.post("/saveSnap",  function (req, res) {
-    uploadSnaps(req, res, async function(err) {
+app.post("/saveSnap", function (req, res) {
+    uploadSnaps(req, res, async function (err) {
         if (err) {
             console.log(err);
             res.json({
                 success: false,
                 error: {
-                    message: 'Upload failed:: ' + JSON.stringify(err)
-                }
+                    message: "Upload failed:: " + JSON.stringify(err),
+                },
             });
         } else {
             console.log(req.body);
             res.json({ success: true, id: req.body.id });
-            if (VERSION==="06") await sendPushNotifications(req.body.title);
+            if (VERSION === "06") await sendPushNotifications(req.body.title);
         }
     });
 });
@@ -65,49 +65,50 @@ app.get("/snaps", function (req, res) {
     files = files.reverse().slice(0, 10);
     console.log("In", UPLOAD_PATH, "there are", files);
     res.json({
-        files
+        files,
     });
 });
 // /potrebno za VER05+
 
-
-
-
-
 // potrebno na VER06
-const webpush = require('web-push');
+const webpush = require("web-push");
 
-// Umjesto baze podataka, čuvam pretplate u datoteci: 
+// Umjesto baze podataka, čuvam pretplate u datoteci:
 let subscriptions = [];
-const SUBS_FILENAME = 'subscriptions.json';
+const SUBS_FILENAME = "subscriptions.json";
 try {
     subscriptions = JSON.parse(fs.readFileSync(SUBS_FILENAME));
 } catch (error) {
-    console.error(error);    
+    console.error(error);
 }
 
-app.post("/saveSubscription", function(req, res) {
+app.post("/saveSubscription", function (req, res) {
     console.log(req.body);
     let sub = req.body.sub;
     subscriptions.push(sub);
     fs.writeFileSync(SUBS_FILENAME, JSON.stringify(subscriptions));
     res.json({
-        success: true
+        success: true,
     });
 });
 
 async function sendPushNotifications(snapTitle) {
-    webpush.setVapidDetails('mailto:igor.mekterovic@fer.hr', 
-    'BL1oXiSXCjKRPParkSNUP7ik7Ltl3RpPUxurkh7ro4rdpNLylON7f3xxZryBF_xN8CqxvemlVdT2EJGH33qe5iw', 
-    '4B9u-sA9uJ8zISw3FXlsbbsaVixK3NJn6o_BZshEZnI');
-    subscriptions.forEach(async sub => {
+    webpush.setVapidDetails(
+        "mailto:igor.mekterovic@fer.hr",
+        "BL1oXiSXCjKRPParkSNUP7ik7Ltl3RpPUxurkh7ro4rdpNLylON7f3xxZryBF_xN8CqxvemlVdT2EJGH33qe5iw",
+        "4B9u-sA9uJ8zISw3FXlsbbsaVixK3NJn6o_BZshEZnI"
+    );
+    subscriptions.forEach(async (sub) => {
         try {
             console.log("Sending notif to", sub);
-            await webpush.sendNotification(sub, JSON.stringify({
-                title: 'New snap!',
-                body: 'Somebody just snaped a new photo: ' + snapTitle,
-                redirectUrl: '/index.html'
-              }));    
+            await webpush.sendNotification(
+                sub,
+                JSON.stringify({
+                    title: "New snap!",
+                    body: "Somebody just snaped a new photo: " + snapTitle,
+                    redirectUrl: "/index.html",
+                })
+            );
         } catch (error) {
             console.error(error);
         }
@@ -115,9 +116,6 @@ async function sendPushNotifications(snapTitle) {
 }
 // /potrebno na VER06
 
-
-
 app.listen(httpPort, function () {
     console.log(`HTTP listening on port: ${httpPort}`);
 });
-
