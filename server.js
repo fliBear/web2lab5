@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const httpPort = process.env.PORT || 3001;
+const httpPort = 3001;
 let VERSION = "02";
 
 const app = express();
