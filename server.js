@@ -1,20 +1,7 @@
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
-const fse = require("fs-extra");
 const httpPort = process.env.PORT || 3001;
 let VERSION = "02";
-
-// if (process.env.VER) {
-//     VERSION = process.env.VER.trim();
-//     console.log("Serving version: " + VERSION);
-// } else {
-//     console.error(
-//         "App version not set. Set the env var 'VER' to 01, 02, ... before you run the server"
-//     );
-//     process.exit();
-// }
 
 const app = express();
 app.use(express.json()); // za VER06
