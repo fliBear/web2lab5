@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA manifest demo</title>
+    <link rel="stylesheet" href="./assets/site.css">
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h3>Rezultati neke igre</h3>
+    </div>
+    <main id="main-score">
+        <div id="games"></div>
+    </main>
+    <template>
+        <div class="game-container"></div>
+        <div class="player-container"></div>
+        <div class="name">Ime: <span></span></div>
+        <div class="score">Rezultat: <span></span></div>
+    </template>
+    <script type="module">
+
+        import { get } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
+
+        async function setData() {
+            let json;
+            const response = await fetch('/games');
+            if(response.ok) {
+                json = await response.json();
+            } else {
+                json = JSON.parse(get("games"));
+            }
+            
+            let games = json.games;
+            for(let i = 0; i < games.length; i++) {
+                createGameData(games[i]);
+            }
+        }
+        
+        function createGameData(game) {
+            let temp = document.getElementsByTagName("template")[0];
+            let gameEl = temp.content.querySelector('.game-container');
+            let containerTmp = temp.content.querySelector(".player-container");
+            let nameTmp = temp.content.querySelector(".name");
+            let scoreTmp = temp.content.querySelector(".score");
+
+            gameEl = document.importNode(gameEl, true);
+
+            for(let player in game) {
+                let containerEl = document.importNode(containerTmp, true);
+                let nameEl = document.importNode(nameTmp, true);
+                let scoreEl = document.importNode(scoreTmp, true); 
+
+                scoreEl.textContent = game[player];
+                nameEl.textContent = player.slice(4);
+
+                let nameDesc = document.createElement('span');
+                nameDesc.innerText = "Ime: ";
+                containerEl.appendChild(nameDesc);
+                containerEl.appendChild(nameEl);
+                let scoreDesc = document.createElement('span');
+                scoreDesc.innerText = "Rezultat: ";
+                containerEl.appendChild(scoreDesc);
+                containerEl.appendChild(scoreEl);
+                gameEl.appendChild(containerEl);
+            }
+
+            let gamesDiv = document.getElementById("games");
+            gamesDiv.appendChild(gameEl);
+
+            let br = document.createElement('br');
+            gamesDiv.appendChild(br);
+        }
+
+
+        window.addEventListener('load', setData);
+
+    </script>
+</body>
+
+</html>

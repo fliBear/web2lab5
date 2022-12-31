@@ -10,6 +10,9 @@
   </head>
   
   <body>
+    <nav>
+      <a href="about.html">About</a>
+    </nav>
     <div class="header">
       <h3>Cookbook PWA v02 (manifest+SW)</h3>
     </div>
@@ -17,9 +20,14 @@
       <img src="./assets/img/logo.png" alt="Cookbook logo" />
     </div>
     <script>
-      navigator.serviceWorker.register('./sw.js')
+      navigator.serviceWorker.register('./sw.js', { type: 'module' })
         .then(reg => console.log('SW registered!', reg))
         .catch(err => console.error('Error registering service worker', err));
+
+      navigator.serviceWorker.ready.then(function (swRegistration) {
+        return swRegistration.sync.register('data-sync');
+      });
+
     </script>
   </body>
 </html>

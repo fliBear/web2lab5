@@ -5,11 +5,13 @@
   "main": "server.js",
   "scripts": {
     "serve": "node server.js",
-    "gen-vapid": "web-push generate-vapid-keys" 
+    "gen-vapid": "web-push generate-vapid-keys"
   },
   "author": "imekterovic",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "idb-keyval": "^6.2.0",
+    "pg": "^8.8.0"
   }
 }

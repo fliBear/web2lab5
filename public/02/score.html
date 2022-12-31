@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA manifest demo</title>
+    <link rel="stylesheet" href="./assets/site.css">
+</head>
+
+<body>
+    <div class="header">
+        <h3>Rezultati neke igre</h3>
+    </div>
+    <main id="main-score">
+        <button type="button" id="publish">Objavi</button>
+        <br>
+        <hr>
+        <label for="name-input"></label>
+        <input type="text" id="name-input">
+        <button type="button" id="add">Dodaj</button>
+        <br>
+        <hr>
+        <button type="button" onclick="updateScores()">Unesi novi rundu</button>
+        <br>
+        <hr>
+        <div id="players"></div>
+    </main>
+    <template>
+        <div class="player-container"></div>
+        <div class="name">Ime: <span></span></div>
+        <div class="score">Rezultat: <span></span></div>
+    </template>
+    <script type="module">
+
+        import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
+
+        const prefix = "pre-";
+        //prefix+player: score
+        const players = {};
+
+        function addPlayer() {
+            let nameEl = document.getElementById('name-input');
+            if(nameEl.value === "") return;
+            name = prefix + nameEl.value;
+            if(players.hasOwnPropery) return;
+            players[name] = 0;
+            changePlayersValues();
+            nameEl.value = "";
+        }
+
+        async function saveData() {
+            let strData = await get("games");
+
+            let data;
+            if(!strData) {
+                data = {};
+                data.games = [];
+            } else {
+                data = JSON.parse(strData);
+            }
+            
+            data.games.push(players);
+            set("games", JSON.stringify(data));
+        }
+
+        function changePlayersValues() {
+            const game = [];
+            for (let key in players) {
+                game.push([key, players[key]]);
+            }
+            game.sort(function(a, b) {return a[1] - b[1]});
+            let playersEl = document.getElementById('players');
+            removeAllChildNodes(playersEl);
+            addChildNodes(game);
+        }
+
+        function addChildNodes(nodes) {
+            for(let i = 0; i < nodes.length; i++) {
+                const name = nodes[i][0];
+                const score = nodes[i][1];
+                addPlayerElement(name.slice(4), score);
+            }
+        }
+
+        function removeAllChildNodes(parent) {
+            while(parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+
+        function addPlayerElement(name, score) {
+            let temp = document.getElementsByTagName("template")[0];
+            let playersEl = document.getElementById('players');
+            let containerEl = temp.content.querySelector(".player-container");
+            let nameEl = temp.content.querySelector(".name");
+            let scoreEl = temp.content.querySelector(".score");
+
+            containerEl = document.importNode(containerEl, true);
+            nameEl = document.importNode(nameEl, true);
+            scoreEl = document.importNode(scoreEl, true);
+           
+            nameEl.textContent = name;
+            scoreEl.textContent = score;
+
+            //dodaj input koji ima prefix za id
+            let input = document.createElement('input');
+            input.type = "number";
+            input.id = prefix + name;
+
+            let nameDesc = document.createElement('span');
+            nameDesc.innerText = "Ime: ";
+            containerEl.appendChild(nameDesc);
+            containerEl.appendChild(nameEl);
+             let scoreDesc = document.createElement('span');
+            scoreDesc.innerText = "Rezultat: ";
+            containerEl.appendChild(scoreDesc);
+            containerEl.appendChild(scoreEl);
+            containerEl.appendChild(input);
+            playersEl.appendChild(containerEl);
+        }
+
+        function updateScores() {
+            for(let key in players) {
+                let roundValue = document.getElementById(key);
+                let value = roundValue.value;
+                if(value === "") {
+                    value = 0;
+                }
+                players[key] = parseInt(players[key]) + parseInt(value);
+            }
+            changePlayersValues();
+        }
+
+        function publish() {
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(players),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+
+            fetch("/save", options)
+                .then(res => {
+                    if(res.url.includes("offline")) {
+                        saveData();
+                    }
+                }).catch(err => {
+                    saveData();
+                })
+        }
+
+        var buttonPlayer = document.getElementById("add");
+        var buttonPublish = document.getElementById("publish");
+
+        // Second, assign click event
+        buttonPlayer.addEventListener("click", addPlayer, false);
+        buttonPublish.addEventListener("click", publish, false);
+
+    </script>
+</body>
+
+</html>
