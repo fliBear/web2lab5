@@ -1,15 +1,19 @@
-import { get, del } from "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm";
+import {
+    get,
+    del,
+    entries,
+} from "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm";
 
-const cacheName = "static_cache1";
+const cacheName = "static_cache12";
 
 const static_cache = [
+    "/",
     "/offline.html",
     "/about.html",
     "./assets/site.css",
     "/manifest.json",
     "/404.html",
     "/score.html",
-    "/scorelist.html",
     "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm",
 ];
 
@@ -66,6 +70,8 @@ async function sendData(data) {
 }
 
 async function handleSync() {
+    console.log("Sync attempt");
+
     let data = await get("games");
 
     if (!data) return;
@@ -79,8 +85,45 @@ async function handleSync() {
     del("games");
 }
 
+async function handleSnaps() {
+    entries().then((entries) => {
+        entries.forEach((entry) => {
+            if (entry[0] === "games") return;
+
+            let snap = entry[1]; //  Each entry is an array of [key, value].
+            let formData = new FormData();
+            formData.append("id", snap.id);
+            formData.append("ts", snap.ts);
+            formData.append("title", snap.title);
+            formData.append("image", snap.image, snap.id + ".png");
+            fetch("/saveSnap", {
+                method: "POST",
+                body: formData,
+            })
+                .then(function (res) {
+                    if (res.ok) {
+                        res.json().then(function (data) {
+                            console.log("Deleting from idb:", snap.id);
+                            del(snap.id);
+                        });
+                    } else {
+                        console.log(res);
+                    }
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        });
+    });
+}
+
 self.addEventListener("sync", function (event) {
+    console.log("Choosing sync");
     if (event.tag == "data-sync") {
         event.waitUntil(handleSync());
+    }
+
+    if (event.tag == "sync-snaps") {
+        event.waitUntil(handleSnaps());
     }
 });

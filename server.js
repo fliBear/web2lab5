@@ -3,6 +3,8 @@ const path = require("path");
 const httpPort = 3001;
 let VERSION = "02";
 fs = require("fs");
+const multer = require("multer");
+const fse = require("fs-extra");
 const mockDB = "./mockDB.txt";
 
 const app = express();
@@ -47,6 +49,51 @@ app.get("/offline.html", function (req, res) {
     res.sendFile(path.join(__dirname, "public", VERSION, "offline.html"));
 });
 
+app.get("/picture.html", function (req, res) {
+    res.sendFile(path.join(__dirname, "public", VERSION, "picture.html"));
+});
+
+app.get("/pictures.html", function (req, res) {
+    res.sendFile(path.join(__dirname, "public", VERSION, "pictures.html"));
+});
+
+const UPLOAD_PATH = path.join(__dirname, "public", VERSION, "uploads");
+var uploadSnaps = multer({
+    storage: multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, UPLOAD_PATH);
+        },
+        filename: function (req, file, cb) {
+            let fn = file.originalname.replaceAll(":", "-");
+            cb(null, fn);
+        },
+    }),
+}).single("image");
+
+app.post("/saveSnap", async function (req, res) {
+    uploadSnaps(req, res, async function (err) {
+        if (err) {
+            console.log(err);
+            res.json({
+                success: false,
+                error: {
+                    message: "Upload failed:: " + JSON.stringify(err),
+                },
+            });
+        } else {
+            res.json({ success: true, id: req.body.id });
+        }
+    });
+});
+
+app.get("/snaps", function (req, res) {
+    let files = fse.readdirSync(UPLOAD_PATH);
+    files = files.reverse().slice(0, 10);
+    res.json({
+        files,
+    });
+});
+
 app.get("/score.html", function (req, res) {
     res.sendFile(path.join(__dirname, "public", VERSION, "score.html"));
 });
@@ -57,6 +104,12 @@ app.get("/scorelist.html", function (req, res) {
 
 app.get("/games", async function (req, res) {
     let data = fs.readFileSync(mockDB);
+    console.log(data);
+    // if (data.trim() === "") {
+    //     data = {};
+    //     data.games = [];
+    // }
+
     data = JSON.parse(data);
     res.json(data);
 });

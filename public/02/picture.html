@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA manifest demo</title>
+    <link rel="stylesheet" href="./assets/site.css">
+</head>
+
+<body>
+    <nav>
+        <a href="/">Početak</a>
+        <a href="about.html">About</a>
+        <a href="score.html">Bilježi</a>
+        <a href="scorelist.html">Rezultati</a>
+        <a href="picture.html">Slikaj</a>
+        <a href="pictures.html">Slike</a>
+    </nav>
+    <div id="container">
+        <input type="file" accept="image/x-png,image/jpeg,image/gif" class="hide" id="img-in" />
+        <div id="camera">
+            <video id="player" autoplay></video>
+            <button id="btnSnap">Uslikaj</button>
+        </div>
+        <div id="display">
+            <canvas id="canvasImage"></canvas>
+            <input id="snapName" placeholder="Unesite naslov" />
+            <button id="btnUpload">Objavi</button>
+        </div>
+    </div>
+    <script type="module">
+        import {get, set} from "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm";
+
+        let player = document.getElementById("player");
+        let canvas = document.getElementById("canvasImage");
+        let camera = document.getElementById("camera");
+        let display = document.getElementById("display");
+        let snapName = document.getElementById("snapName");
+        let imgInput = document.getElementById("img-in");
+
+        function startCapture() {
+            camera.classList.remove("hide");
+            display.classList.add("hide");
+            if (!("mediaDevices" in navigator)) {
+                imgInput.classList.remove("hide");
+                camera.classList.add("hide");
+                display.classList.remove("hide");
+            } else {
+                navigator.mediaDevices
+                    .getUserMedia({ video: true, audio: false })
+                    .then((stream) => {
+                        player.srcObject = stream;
+                    })
+                    .catch((err) => {
+                        alert("Media stream not working");
+                        console.log(err);
+                    });
+            }
+
+        }
+
+        function stopCapture() {
+            camera.classList.add("hide");
+            display.classList.remove("hide");
+            try {
+                player.srcObject.getVideoTracks().forEach(function (track) {
+                    track.stop();
+                });
+            } catch(err) {
+
+            }
+        }
+
+        startCapture();
+
+        imgInput.addEventListener("change", function () {
+            var file = document.getElementById('img-in').files[0];
+            var container = document.getElementById('container');
+            var reader = new FileReader();
+            // it's onload event and you forgot (parameters)
+            reader.onload = function (e) {
+                var image = document.createElement("img");
+                // the result image data
+                image.src = e.target.result;
+                image.id = "loaded-img";
+                image.onload = onImgLoad;
+                container.appendChild(image);
+            }
+            // you have to declare the file loading
+            reader.readAsDataURL(file);
+        })
+
+        function onImgLoad() {
+            let img = document.getElementById("loaded-img");
+            var container = document.getElementById('container');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas
+                .getContext("2d")
+                .drawImage(img, 0, 0, canvas.width, canvas.height);
+                container.removeChild(img);
+        }
+
+         document
+            .getElementById("btnSnap")
+            .addEventListener("click", function (event) {
+                canvas.width = player.getBoundingClientRect().width;
+                canvas.height = player.getBoundingClientRect().height;
+                canvas
+                    .getContext("2d")
+                    .drawImage(player, 0, 0, canvas.width, canvas.height);
+                stopCapture();
+            });
+
+        document
+                .getElementById("btnUpload")
+                .addEventListener("click", function (event) {
+                    event.preventDefault();
+                    if (!snapName.value.trim()) {
+                        return false;
+                    }
+                    
+                    if (
+                        "serviceWorker" in navigator &&
+                        "SyncManager" in window
+                    ) {
+                        let url = canvas.toDataURL();
+                        fetch(url)
+                            .then((res) => res.blob())
+                            .then((blob) => {
+                                let ts = new Date().toISOString();
+                                let id = ts + snapName.value.replace(/\s/g, '_');  // ws->_
+                                set(id, {
+                                    id,
+                                    ts,
+                                    title: snapName.value,
+                                    image: blob
+                                });
+                                return navigator.serviceWorker.ready;
+                            })
+                            .then((swRegistration) => {
+                                return swRegistration.sync.register(
+                                    "sync-snaps"
+                                );
+                            })
+                            .then(() => {
+                                console.log("Queued for sync");
+                                startCapture();
+                            })
+                            .catch((err) => {
+                                console.log(error);
+                            });
+                    } else {
+                        let url = canvas.toDataURL();
+                        fetch(url)
+                            .then((res) => res.blob())
+                            .then((blob) => {
+                                let ts = new Date().toISOString();
+                                let id = ts + snapName.value.replace(/\s/g, '_');  // ws->_
+
+                                let formData = new FormData();
+                                formData.append("id", id);
+                                formData.append("ts", ts);
+                                formData.append("title", snapName.value);
+                                formData.append("image", blob, id + ".png");
+                                fetch("/saveSnap", {
+                                    method: "POST",
+                                    body: formData,
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+                            })
+                            .then(() => {
+                                console.log("Queued for sync");
+                                startCapture();
+                            })
+                            .catch((err) => {
+                                console.log(err);
+                            });
+                    }
+                });
+
+    </script>
+</body>
+
+</html>

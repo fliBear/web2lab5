@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWA manifest demo</title>
+    <link rel="stylesheet" href="./assets/site.css">
+</head>
+
+<body>
+    <nav>
+        <a href="/">Početak</a>
+        <a href="about.html">About</a>
+        <a href="score.html">Bilježi</a>
+        <a href="scorelist.html">Rezultati</a>
+        <a href="picture.html">Slikaj</a>
+        <a href="pictures.html">Slike</a>
+    </nav>
+    <div id="picture-holder">
+    </div>
+    <script type="module">
+        async function setData() {
+            let json;
+            const response = await fetch('/snaps');
+            if (response.ok) {
+                json = await response.json();
+            } 
+
+            setPictures(json);
+        }
+
+        function setPictures(data) {
+            let container = document.getElementById("picture-holder")
+            let pData = data.files;
+
+            for(let i = 0; i < pData.length; i++) {
+                let img = document.createElement('img');
+                img.src = "./uploads/" + pData[i];
+                container.appendChild(img);
+            }
+
+        }
+
+        setData();
+
+    </script>
+</body>
+
+</html>

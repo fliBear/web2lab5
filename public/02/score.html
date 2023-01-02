@@ -10,6 +10,14 @@
 </head>
 
 <body>
+    <nav>
+        <a href="/">Početak</a>
+        <a href="about.html">About</a>
+        <a href="score.html">Bilježi</a>
+        <a href="scorelist.html">Rezultati</a>
+        <a href="picture.html">Slikaj</a>
+        <a href="pictures.html">Slike</a>
+    </nav>
     <div class="header">
         <h3>Rezultati neke igre</h3>
     </div>
@@ -22,7 +30,7 @@
         <button type="button" id="add">Dodaj</button>
         <br>
         <hr>
-        <button type="button" onclick="updateScores()">Unesi novi rundu</button>
+        <button type="button" id="new-round">Unesi novi rundu</button>
         <br>
         <hr>
         <div id="players"></div>
@@ -154,10 +162,14 @@
 
         var buttonPlayer = document.getElementById("add");
         var buttonPublish = document.getElementById("publish");
+        var newRound = document.getElementById("new-round");
 
         // Second, assign click event
         buttonPlayer.addEventListener("click", addPlayer, false);
         buttonPublish.addEventListener("click", publish, false);
+        newRound.addEventListener("click", updateScores, false);
+
+
 
     </script>
 </body>
