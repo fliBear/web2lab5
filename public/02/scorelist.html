@@ -31,17 +31,20 @@
         <div class="name">Ime: <span></span></div>
         <div class="score">Rezultat: <span></span></div>
     </template>
-    <!-- <script>
+    <script>
+        console.log("Prepearing to send sync");
         if ("serviceWorker" in navigator) {
+            console.log("Sending sync");
                 navigator.serviceWorker.ready.then(function (swRegistration) {
                     return swRegistration.sync.register('data-sync');
                 });
             }
-    </script> -->
+    </script>
     <script type="module">
 
         import { get } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
 
+        console.log("Prepearing games data");
         async function setData() {
             let json;
             const response = await fetch('/games');

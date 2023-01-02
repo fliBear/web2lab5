@@ -104,11 +104,11 @@ app.get("/scorelist.html", function (req, res) {
 
 app.get("/games", async function (req, res) {
     let data = fs.readFileSync(mockDB);
-    console.log(data);
-    // if (data.trim() === "") {
-    //     data = {};
-    //     data.games = [];
-    // }
+
+    if (!data) {
+        data = {};
+        data.games = [];
+    }
 
     data = JSON.parse(data);
     res.json(data);
