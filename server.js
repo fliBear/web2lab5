@@ -71,19 +71,20 @@ var uploadSnaps = multer({
 }).single("image");
 
 app.post("/saveSnap", async function (req, res) {
-    uploadSnaps(req, res, async function (err) {
-        if (err) {
-            console.log(err);
-            res.json({
-                success: false,
-                error: {
-                    message: "Upload failed:: " + JSON.stringify(err),
-                },
-            });
-        } else {
-            res.json({ success: true, id: req.body.id });
-        }
-    });
+    // uploadSnaps(req, res, async function (err) {
+    //     if (err) {
+    //         console.log(err);
+    //         res.json({
+    //             success: false,
+    //             error: {
+    //                 message: "Upload failed:: " + JSON.stringify(err),
+    //             },
+    //         });
+    //     } else {
+    //         res.json({ success: true, id: req.body.id });
+    //     }
+    // });
+    res.json({ success: true, id: req.body.id }); //   <----
 });
 
 app.get("/snaps", function (req, res) {

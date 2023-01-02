@@ -4,7 +4,7 @@ import {
     entries,
 } from "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm";
 
-const cacheName = "static_cache4";
+const cacheName = "static_cache3";
 
 const static_cache = [
     "/",
